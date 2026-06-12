@@ -461,7 +461,7 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     back   = [[InlineKeyboardButton("🏠 Accueil", callback_data="home")]]
 
     static = {
-        "menu_certified": CONFIG.get("texte_certified", ""),
+        "menu_certified": None,
         "menu_contact":   CONFIG.get("texte_contact", ""),
 
         "menu_concours":   None,
@@ -469,6 +469,22 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if action in static and static[action] is not None:
         await query.edit_message_text(static[action], reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
+
+    elif action == "menu_certified":
+        certified_list = [(dep, i, p) for dep, ps in PROFILS.items() for i, p in enumerate(ps) if p.get("certified")]
+        if not certified_list:
+            await query.edit_message_text("✅ *Liste Certified*\n\nAucun profil certifie pour le moment.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Accueil", callback_data="home")]]), parse_mode="Markdown")
+            return
+        keyboard = []
+        for dep, i, p in certified_list:
+            secteur = p.get("secteur", f"Dep. {dep}")
+            keyboard.append([InlineKeyboardButton(f"✅ {p['nom']} — {secteur}", callback_data=f"profil_{dep}_{i}")])
+        keyboard.append([InlineKeyboardButton("🏠 Accueil", callback_data="home")])
+        await query.edit_message_text(
+            f"✅ *Liste Certified*\n\n{len(certified_list)} profil(s) certifie(s) par nos equipes :",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
 
     elif action == "menu_concours":
         keyboard = [
