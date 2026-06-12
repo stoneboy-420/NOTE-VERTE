@@ -635,18 +635,28 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🔌 Je suis un plug",        callback_data="certif_plug")],
             [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
         ]
-        await query.edit_message_text(
-            "🏅 *Certification*\n\nTu es :",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown"
-        )
+        try:
+            await query.edit_message_text(
+                "🏅 *Certification*\n\nTu es :",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+        except Exception:
+            await query.message.delete()
+            await context.bot.send_message(
+                chat_id=query.message.chat.id,
+                text="🏅 *Certification*\n\nTu es :",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
 
     elif action == "certif_particulier":
         keyboard = [
             [InlineKeyboardButton("📩 Contacter @stoneboy_420", url="https://t.me/stoneboy_420")],
             [InlineKeyboardButton("◀️ Retour", callback_data="certif_choix")],
         ]
-        await query.edit_message_text(
+        try:
+            await query.edit_message_text(
             "🟢 Envoie-nous les infos suivantes pour lancer la verification :\n\n"
             "📌 Nom du plug :\n"
             "🔗 Lien du plug :\n"
@@ -659,13 +669,32 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
+        except Exception:
+            await query.message.delete()
+            await context.bot.send_message(
+                chat_id=query.message.chat.id,
+                text=(
+                    "🟢 Envoie-nous les infos suivantes pour lancer la verification :\n\n"
+                    "📌 Nom du plug :\n"
+                    "🔗 Lien du plug :\n"
+                    "💸 Prix minimum :\n"
+                    "🚚 Mode : Livraison / Meet-up / Postal\n"
+                    "📍 Secteur : ville ou zone desservie\n"
+                    "👤 Pseudo a recontacter :\n"
+                    "🔥 Ta selection preferee ? (2-3 produits) non obligatoire\n\n"
+                    "✅ Une fois recu, on verifie les infos et on revient vers toi."
+                ),
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
 
     elif action == "certif_plug":
         keyboard = [
             [InlineKeyboardButton("📩 Contacter @stoneboy_420", url="https://t.me/stoneboy_420")],
             [InlineKeyboardButton("◀️ Retour", callback_data="certif_choix")],
         ]
-        await query.edit_message_text(
+        try:
+            await query.edit_message_text(
             "🟢 Tu veux devenir plug certifie ?\n"
             "Envoie-nous les infos necessaires pour lancer ta demande :\n\n"
             "🔗 Lien du menu :\n"
@@ -684,6 +713,28 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
+        except Exception:
+            await query.message.delete()
+            await context.bot.send_message(
+                chat_id=query.message.chat.id,
+                text=(
+                    "🟢 Tu veux devenir plug certifie ?\n\n"
+                    "🔗 Lien du menu :\n"
+                    "📍 Secteur :\n"
+                    "💸 Prix minimum :\n"
+                    "🚚 Mode : Livraison / Meet-up / Postal\n"
+                    "⏱️ Delais moyens :\n"
+                    "👤 Pseudo a recontacter :\n"
+                    "🔥 Ta selection et son prix (panel decouverte max 2-3 produits)\n\n"
+                    "🤝 Partenariat / collaboration :\n"
+                    "🔥 Offre decouverte\n"
+                    "💚 Avantage/code promo collab La Note Verte\n\n"
+                    "⚠️ AUCUNE OBLIGATION ⚠️\n\n"
+                    "✅ Une fois recu, on verifie les infos et on revient vers toi."
+                ),
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
 
     elif action == "check_sub":
         uid = query.from_user.id
