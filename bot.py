@@ -81,7 +81,7 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🎁 Concours",        callback_data="menu_concours"),
          InlineKeyboardButton("🏷️ Code Promo",      callback_data="menu_promo")],
         [InlineKeyboardButton("📍 Trouver un profil pres de moi", callback_data="geo_start")],
-        [InlineKeyboardButton("🏅 Se faire certifier / Certifier son plug", callback_data="certif_start")],
+        [InlineKeyboardButton("🏅 Se faire certifier / Certifier son plug", callback_data="certif_choix")],
     ]
     text = f"*{CONFIG['nom_bot']}*\n\n{CONFIG['description']}\n\nChoisis une option :"
     if update.message:
@@ -559,6 +559,62 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
+    elif action == "certif_choix":
+        keyboard = [
+            [InlineKeyboardButton("👤 Je suis un particulier", callback_data="certif_particulier")],
+            [InlineKeyboardButton("🔌 Je suis un plug",        callback_data="certif_plug")],
+            [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
+        ]
+        await query.edit_message_text(
+            "🏅 *Certification*\n\nTu es :",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
+
+    elif action == "certif_particulier":
+        keyboard = [
+            [InlineKeyboardButton("📩 Contacter @stoneboy_420", url="https://t.me/stoneboy_420")],
+            [InlineKeyboardButton("◀️ Retour", callback_data="certif_choix")],
+        ]
+        await query.edit_message_text(
+            "🟢 Envoie-nous les infos suivantes pour lancer la verification :\n\n"
+            "📌 Nom du plug :\n"
+            "🔗 Lien du plug :\n"
+            "💸 Prix minimum :\n"
+            "🚚 Mode : Livraison / Meet-up / Postal\n"
+            "📍 Secteur : ville ou zone desservie\n"
+            "👤 Pseudo a recontacter :\n"
+            "🔥 Ta selection preferee ? (2-3 produits) non obligatoire\n\n"
+            "✅ Une fois recu, on verifie les infos et on revient vers toi.",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
+
+    elif action == "certif_plug":
+        keyboard = [
+            [InlineKeyboardButton("📩 Contacter @stoneboy_420", url="https://t.me/stoneboy_420")],
+            [InlineKeyboardButton("◀️ Retour", callback_data="certif_choix")],
+        ]
+        await query.edit_message_text(
+            "🟢 Tu veux devenir plug certifie ?\n"
+            "Envoie-nous les infos necessaires pour lancer ta demande :\n\n"
+            "🔗 Lien du menu :\n"
+            "📍 Secteur :\n"
+            "💸 Prix minimum :\n"
+            "🚚 Mode : Livraison / Meet-up / Postal\n"
+            "⏱️ Delais moyens :\n"
+            "👤 Pseudo a recontacter :\n"
+            "🔥 Ta selection et son prix (panel decouverte max 2-3 produits)\n\n"
+            "🤝 Partenariat / collaboration :\n"
+            "Tu peux proposer un avantage pour notre communaute :\n"
+            "🔥 Offre decouverte\n"
+            "💚 Avantage/code promo collab La Note Verte\n\n"
+            "⚠️ AUCUNE OBLIGATION ⚠️\n\n"
+            "✅ Une fois recu, on verifie les infos et on revient vers toi.",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
+
     elif action == "home":
         await show_menu(update, context)
 
@@ -652,7 +708,7 @@ def main():
     app.add_handler(CallbackQueryHandler(show_departements,  pattern="^region_"))
     app.add_handler(CallbackQueryHandler(show_profils,       pattern="^dep_"))
     app.add_handler(CallbackQueryHandler(show_profil_detail, pattern="^profil_"))
-    app.add_handler(CallbackQueryHandler(handle_menu_cb,     pattern="^(menu_|home|promo_|certif_f_)"))
+    app.add_handler(CallbackQueryHandler(handle_menu_cb,     pattern="^(menu_|home|promo_|certif_f_|certif_choix|certif_particulier|certif_plug)"))
 
     print("🤖 La Note Verte - Bot lance !")
     app.run_polling()
