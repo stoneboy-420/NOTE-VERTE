@@ -92,7 +92,6 @@ async def check_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return WAIT_CODE
 
 async def admin_code_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Gère le code admin quand l'utilisateur est déjà connecté avec STONNABIS"""
     uid = update.effective_user.id
     if not context.user_data.get("waiting_admin_code"):
         return
@@ -100,157 +99,26 @@ async def admin_code_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if code == ADMIN_CODE:
         ADMIN_USERS.add(uid)
         context.user_data.pop("waiting_admin_code", None)
-        await update.message.reply_text(
-            "✅ *Accès admin accordé !*
-
-"
-            "⚙️ *Panel Admin — La Note Verte*
-
-"
-            "*Profils :*
-"
-            "➕ /ajout — Ajouter un profil
-"
-            "🗑️ /suppr — Supprimer par nom
-"
-            "📋 /liste\_dep XX — Voir un département
-
-"
-            "*SK-AM :*
-"
-            "➕ /ajout\_skam — Ajouter un membre
-"
-            "🗑️ /suppr\_skam — Supprimer un membre
-
-"
-            "*Promos :*
-"
-            "➕ /ajout\_promo — Ajouter un partenaire
-"
-            "🗑️ /suppr\_promo — Supprimer un partenaire
-
-"
-            "📊 /stats — Statistiques",
-            parse_mode="Markdown"
+        msg = (
+            "✅ Acces admin accorde !\n\n"
+            "⚙️ *Panel Admin — La Note Verte*\n\n"
+            "*Profils :*\n"
+            "➕ /ajout — Ajouter un profil\n"
+            "🗑️ /suppr — Supprimer par nom\n"
+            "📋 /liste\_dep XX — Voir un département\n\n"
+            "*SK-AM :*\n"
+            "➕ /ajout\_skam — Ajouter un membre\n"
+            "🗑️ /suppr\_skam — Supprimer un membre\n\n"
+            "*Promos :*\n"
+            "➕ /ajout\_promo — Ajouter un partenaire\n"
+            "🗑️ /suppr\_promo — Supprimer un partenaire\n\n"
+            "📊 /stats — Statistiques"
         )
+        await update.message.reply_text(msg, parse_mode="Markdown")
     else:
         context.user_data.pop("waiting_admin_code", None)
         await update.message.reply_text("❌ Code incorrect.")
 
-# ── Menu ─────────────────────────────────────────────────────────────────────
-async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("✅ Liste Certified", callback_data="menu_certified"),
-         InlineKeyboardButton("📞 Contact",         callback_data="menu_contact")],
-        [InlineKeyboardButton("📋 Liste SK-AM",     callback_data="menu_skam"),
-         InlineKeyboardButton("🌐 Nos Réseaux",     callback_data="menu_reseaux")],
-        [InlineKeyboardButton("🎁 Concours",        callback_data="menu_concours"),
-         InlineKeyboardButton("🏷️ Code Promo",      callback_data="menu_promo")],
-        [InlineKeyboardButton("📍 Trouver un profil près de moi", callback_data="geo_start")],
-        [InlineKeyboardButton("🏅 Se faire certifier / Certifier son plug", callback_data="certif_start")],
-    ]
-    text = f"*{CONFIG['nom_bot']}*\n\n{CONFIG['description']}\n\nChoisis une option :"
-    if update.message:
-        await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
-    else:
-        await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
-
-async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    uid = update.effective_user.id
-    if uid not in UNLOCKED_USERS and uid not in ADMIN_USERS:
-        await update.message.reply_text("🔐 Tape /start pour accéder au bot.")
-        return
-    await show_menu(update, context)
-
-# ── Certification ─────────────────────────────────────────────────────────────
-async def certif_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    uid = query.from_user.id
-    if uid not in UNLOCKED_USERS and uid not in ADMIN_USERS:
-        await query.edit_message_text("🔐 Tape /start pour accéder au bot.")
-        return ConversationHandler.END
-    context.user_data["certif"] = {}
-    context.user_data["certif_step"] = 0
-    _, q, ex = CERTIF_QUESTIONS[0]
-    await query.edit_message_text(
-        f"🏅 *Demande de certification* — Étape 1/6\n\n{q}\n\n_(ex : {ex})_\n\n_(Tape /annuler pour quitter)_",
-        parse_mode="Markdown"
-    )
-    return CERTIF_1
-
-async def certif_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    step = context.user_data.get("certif_step", 0)
-    key  = CERTIF_QUESTIONS[step][0]
-    context.user_data["certif"][key] = update.message.text
-    next_step = step + 1
-    context.user_data["certif_step"] = next_step
-    if next_step < len(CERTIF_QUESTIONS):
-        _, q, ex = CERTIF_QUESTIONS[next_step]
-        await update.message.reply_text(
-            f"*Étape {next_step+1}/6 :*\n\n{q}\n\n_(ex : {ex})_",
-            parse_mode="Markdown"
-        )
-        return CERTIF_1 + next_step
-    data = context.user_data["certif"]
-    user = update.effective_user
-    uname = f"@{user.username}" if user.username else f"ID:{user.id}"
-    recap = (
-        "✅ *Demande envoyée !*\n\n"
-        "━━━━━━━━━━━━━━━━\n"
-        f"👤 *Pseudo :* {data.get('pseudo','—')}\n"
-        f"🏷️ *Plug :* {data.get('plug_nom','—')}\n"
-        f"🔗 *Lien :* {data.get('plug_lien','—')}\n"
-        f"🌿 *Gamme :* {data.get('gamme','—')}\n"
-        f"💶 *Prix min :* {data.get('prix_min','—')}\n"
-        f"📦 *Livraison :* {data.get('livraison','—')}\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "Notre équipe te recontactera rapidement 🍀"
-    )
-    await update.message.reply_text(recap, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Accueil", callback_data="home")]]), parse_mode="Markdown")
-    await notify_admin(context,
-        "🏅 *Nouvelle demande de certification !*\n"
-        "━━━━━━━━━━━━━━━━\n"
-        f"👤 *Pseudo :* {data.get('pseudo','—')}\n"
-        f"🏷️ *Plug :* {data.get('plug_nom','—')}\n"
-        f"🔗 *Lien :* {data.get('plug_lien','—')}\n"
-        f"🌿 *Gamme :* {data.get('gamme','—')}\n"
-        f"💶 *Prix min :* {data.get('prix_min','—')}\n"
-        f"📦 *Livraison :* {data.get('livraison','—')}\n"
-        "━━━━━━━━━━━━━━━━\n"
-        f"📩 *Envoyé par :* {uname}"
-    )
-    context.user_data.pop("certif", None)
-    context.user_data.pop("certif_step", None)
-    return ConversationHandler.END
-
-async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data.clear()
-    await update.message.reply_text("❌ Annulé. Tape /menu pour revenir.")
-    return ConversationHandler.END
-
-# ── /admin ────────────────────────────────────────────────────────────────────
-async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id not in ADMIN_USERS:
-        await update.message.reply_text("⛔ Accès refusé.")
-        return
-    await update.message.reply_text(
-        "⚙️ *Panel Admin — La Note Verte*\n\n"
-        "*Profils :*\n"
-        "➕ /ajout — Ajouter un profil\n"
-        "🗑️ /suppr — Supprimer par nom\n"
-        "📋 /liste\\_dep XX — Voir un département\n\n"
-        "*SK-AM :*\n"
-        "➕ /ajout\\_skam — Ajouter un membre\n"
-        "🗑️ /suppr\\_skam — Supprimer un membre\n\n"
-        "*Promos :*\n"
-        "➕ /ajout\\_promo — Ajouter un partenaire\n"
-        "🗑️ /suppr\\_promo — Supprimer un partenaire\n\n"
-        "📊 /stats — Statistiques",
-        parse_mode="Markdown"
-    )
-
-# ── Admin : Profils ───────────────────────────────────────────────────────────
 async def ajout_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_USERS:
         return ConversationHandler.END
