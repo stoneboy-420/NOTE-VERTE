@@ -31,6 +31,7 @@ ADMIN_CHAT_ID = int(os.environ.get("ADMIN_CHAT_ID", "0"))
 UNLOCKED_USERS = set()
 ADMIN_USERS    = set()
 
+# Etats conversation
 (
     WAIT_CODE,
     CERTIF_1, CERTIF_2, CERTIF_3, CERTIF_4, CERTIF_5, CERTIF_6,
@@ -38,9 +39,8 @@ ADMIN_USERS    = set()
     SUPPR_NOM,
     SKAM_NOM, SKAM_LIEN,
     PROMO_NOM, PROMO_EMOJI, PROMO_CODE, PROMO_REDUC, PROMO_LIEN,
-) = range(19)
-
-ADMIN_WAIT = 99
+    ADMIN_WAIT,
+) = range(20)
 
 CERTIF_QUESTIONS = [
     ("pseudo",    "👤 Ton *pseudo Telegram* ?",       "@ton_pseudo"),
@@ -97,8 +97,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🍀 *La Note Verte*\n\n"
         "👋 Salut !\n\n"
         "Ici on certifie les meilleurs plugs de France, testes et approuves par nos equipes. "
-        "Tu trouveras forcément ton plug prefere 😎\n\n"
-        "Si il n'y est pas, hesite pas a contacter nos equipes pour faire certifier ton plug.\n\n"
+        "Tu trouveras forcement ton plug prefere 😎\n\n"
+        "Si il n'y est pas, hesite pas a contacter nos equipes.\n\n"
         "🔐 Entre ton code d'acces :",
         parse_mode="Markdown"
     )
@@ -134,29 +134,27 @@ async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await show_menu(update, context)
 
-# ── /admin ────────────────────────────────────────────────────────────────────
+# ── /admin ─────────────────────────────────────────────────────────────────────
 async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
     if uid in ADMIN_USERS:
         await update.message.reply_text(ADMIN_HELP, parse_mode="Markdown")
-    else:
-        context.user_data["waiting_admin_code"] = True
-        await update.message.reply_text("🔑 Entre le code admin :")
+        return ConversationHandler.END
+    await update.message.reply_text("🔑 Entre le code admin :")
+    return ADMIN_WAIT
 
-async def admin_code_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.user_data.get("waiting_admin_code"):
-        return
+async def admin_code_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid  = update.effective_user.id
     code = update.message.text.strip()
-    context.user_data.pop("waiting_admin_code", None)
     if code == ADMIN_CODE:
         ADMIN_USERS.add(uid)
         UNLOCKED_USERS.add(uid)
         await update.message.reply_text("✅ Acces admin accorde !\n\n" + ADMIN_HELP, parse_mode="Markdown")
     else:
         await update.message.reply_text("❌ Code incorrect.")
+    return ConversationHandler.END
 
-# ── Certification ─────────────────────────────────────────────────────────────
+# ── Certification ──────────────────────────────────────────────────────────────
 async def certif_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -222,11 +220,11 @@ async def certif_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.pop("certif_step", None)
     return ConversationHandler.END
 
-# ── Admin Profils ─────────────────────────────────────────────────────────────
+# ── Admin Profils ──────────────────────────────────────────────────────────────
 async def ajout_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_USERS:
         return ConversationHandler.END
-    await update.message.reply_text("➕ *Ajout profil*\n\nNumero du departement ? (ex: 75)", parse_mode="Markdown")
+    await update.message.reply_text("➕ Numero du departement ? (ex: 75)")
     return AJOUT_DEP
 
 async def ajout_dep(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -269,9 +267,9 @@ async def suppr_nom(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if p["nom"].lower() == nom.lower():
                 ps.pop(i)
                 save_json("profils.json", PROFILS)
-                await update.message.reply_text(f"✅ *{nom}* supprime du departement {dep}.", parse_mode="Markdown")
+                await update.message.reply_text(f"✅ *{nom}* supprime.", parse_mode="Markdown")
                 return ConversationHandler.END
-    await update.message.reply_text(f"😕 Profil *{nom}* introuvable.", parse_mode="Markdown")
+    await update.message.reply_text(f"😕 *{nom}* introuvable.", parse_mode="Markdown")
     return ConversationHandler.END
 
 async def liste_dep(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -292,11 +290,11 @@ async def liste_dep(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lines.append(f"{badge} *{i+1}. {p['nom']}*\n   🔗 {p.get('contact','—')}")
     await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
-# ── Admin SK-AM ───────────────────────────────────────────────────────────────
+# ── Admin SK-AM ────────────────────────────────────────────────────────────────
 async def ajout_skam_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_USERS:
         return ConversationHandler.END
-    await update.message.reply_text("📋 *Ajout SK-AM*\n\nNom du membre ?", parse_mode="Markdown")
+    await update.message.reply_text("📋 Nom du membre SK-AM ?")
     return SKAM_NOM
 
 async def ajout_skam_nom(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -307,7 +305,7 @@ async def ajout_skam_nom(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ajout_skam_lien(update: Update, context: ContextTypes.DEFAULT_TYPE):
     SKAM.append({"nom": context.user_data["skam_nom"], "lien": update.message.text.strip()})
     save_json("skam.json", SKAM)
-    await update.message.reply_text(f"✅ *{context.user_data['skam_nom']}* ajoute a la liste SK-AM !", parse_mode="Markdown")
+    await update.message.reply_text(f"✅ *{context.user_data['skam_nom']}* ajoute a SK-AM !", parse_mode="Markdown")
     context.user_data.clear()
     return ConversationHandler.END
 
@@ -326,13 +324,13 @@ async def suppr_skam(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     SKAM.pop(idx)
     save_json("skam.json", SKAM)
-    await update.message.reply_text(f"✅ *{nom}* supprime de la liste SK-AM.", parse_mode="Markdown")
+    await update.message.reply_text(f"✅ *{nom}* supprime de SK-AM.", parse_mode="Markdown")
 
-# ── Admin Promos ──────────────────────────────────────────────────────────────
+# ── Admin Promos ───────────────────────────────────────────────────────────────
 async def ajout_promo_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_USERS:
         return ConversationHandler.END
-    await update.message.reply_text("🏷️ *Ajout partenaire*\n\nNom du commercant ?", parse_mode="Markdown")
+    await update.message.reply_text("🏷️ Nom du commercant ?")
     return PROMO_NOM
 
 async def ajout_promo_nom(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -404,7 +402,7 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def get_my_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"🔑 Ton Chat ID : `{update.effective_user.id}`", parse_mode="Markdown")
 
-# ── Geo ───────────────────────────────────────────────────────────────────────
+# ── Geo ────────────────────────────────────────────────────────────────────────
 async def geo_start_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -452,7 +450,7 @@ async def show_profil_detail(update: Update, context: ContextTypes.DEFAULT_TYPE)
     keyboard = [[InlineKeyboardButton("◀️ Retour", callback_data=f"dep_{dep_num}")]]
     await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
-# ── Pages menu ────────────────────────────────────────────────────────────────
+# ── Pages menu ─────────────────────────────────────────────────────────────────
 async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query  = update.callback_query
     await query.answer()
@@ -475,7 +473,7 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         keyboard = [[InlineKeyboardButton(m["nom"], url=m["lien"])] for m in SKAM]
         keyboard.append([InlineKeyboardButton("🏠 Accueil", callback_data="home")])
-        await query.edit_message_text("📋 *Liste SK-AM*\n\nClique sur un membre pour acceder a son lien :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        await query.edit_message_text("📋 *Liste SK-AM*\n\nClique sur un membre :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
     elif action == "menu_promo":
         if not PROMOS:
@@ -504,7 +502,7 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif action == "home":
         await show_menu(update, context)
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# ── Main ───────────────────────────────────────────────────────────────────────
 def main():
     TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
     if not TOKEN:
@@ -518,6 +516,12 @@ def main():
         fallbacks=[CommandHandler("start", start)],
         allow_reentry=True,
     )
+    admin_conv = ConversationHandler(
+        entry_points=[CommandHandler("admin", admin_panel)],
+        states={ADMIN_WAIT: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_code_check)]},
+        fallbacks=[CommandHandler("annuler", cancel)],
+        allow_reentry=True,
+    )
     certif_conv = ConversationHandler(
         entry_points=[CallbackQueryHandler(certif_start, pattern="^certif_start$")],
         states={
@@ -529,6 +533,7 @@ def main():
             CERTIF_6: [MessageHandler(filters.TEXT & ~filters.COMMAND, certif_handler)],
         },
         fallbacks=[CommandHandler("annuler", cancel)],
+        per_message=False,
         allow_reentry=True,
     )
     ajout_conv = ConversationHandler(
@@ -571,19 +576,12 @@ def main():
     )
 
     app.add_handler(code_conv)
+    app.add_handler(admin_conv)
     app.add_handler(certif_conv)
     app.add_handler(ajout_conv)
     app.add_handler(suppr_conv)
     app.add_handler(ajout_skam_conv)
     app.add_handler(ajout_promo_conv)
-    admin_conv = ConversationHandler(
-        entry_points=[CommandHandler("admin", admin_panel)],
-        states={ADMIN_WAIT: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_code_check)]},
-        fallbacks=[CommandHandler("annuler", cancel)],
-        allow_reentry=True,
-    )
-    app.add_handler(admin_conv)
-
     app.add_handler(CommandHandler("menu",        menu_cmd))
     app.add_handler(CommandHandler("liste_dep",   liste_dep))
     app.add_handler(CommandHandler("stats",       stats))
