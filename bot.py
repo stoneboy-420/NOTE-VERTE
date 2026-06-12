@@ -51,9 +51,9 @@ async def send_photo_then_text(chat_id, image_key, text, keyboard, context):
         )
 PROMOS       = load_json("promos.json")
 
-SECRET_CODE   = "STONNABIS"
 ADMIN_CODE    = "Luphima6274"
 ADMIN_CHAT_ID = int(os.environ.get("ADMIN_CHAT_ID", "0"))
+CANAL         = "@LaNoteVerte"
 
 UNLOCKED_USERS = set()
 ADMIN_USERS    = set()
@@ -120,39 +120,52 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_photo_then_text(chat_id, "menu", text, keyboard, context)
 
 # ── /start ────────────────────────────────────────────────────────────────────
+async def is_subscribed(user_id: int, context) -> bool:
+    """Verifie si l'utilisateur est abonne au canal"""
+    try:
+        member = await context.bot.get_chat_member(chat_id=CANAL, user_id=user_id)
+        return member.status in ("member", "administrator", "creator")
+    except Exception:
+        return False
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
-    if uid in UNLOCKED_USERS or uid in ADMIN_USERS:
+    # Admin : acces direct
+    if uid in ADMIN_USERS:
         await show_menu(update, context)
         return ConversationHandler.END
-    await update.message.reply_text(
-        "🍀 *La Note Verte*\n\n"
-        "👋 Salut !\n\n"
-        "Ici on certifie les meilleurs plugs de France, testes et approuves par nos equipes. "
-        "Tu trouveras forcement ton plug prefere 😎\n\n"
-        "Si il n'y est pas, hesite pas a contacter nos equipes.\n\n"
-        "🔐 Entre ton code d'acces :",
+    # Deja verifie
+    if uid in UNLOCKED_USERS:
+        await show_menu(update, context)
+        return ConversationHandler.END
+    # Verifier abonnement canal
+    if await is_subscribed(uid, context):
+        UNLOCKED_USERS.add(uid)
+        await show_menu(update, context)
+        return ConversationHandler.END
+    # Pas abonne
+    keyboard = [
+        [InlineKeyboardButton("📢 Rejoindre le canal", url="https://t.me/LaNoteVerte")],
+        [InlineKeyboardButton("✅ Verifier mon abonnement", callback_data="check_sub")],
+    ]
+    await update.message.reply_photo(
+        photo=IMAGES["menu"],
+        caption=(
+            "🍀 *La Note Verte*\n\n"
+            "👋 Salut !\n\n"
+            "Ici on certifie les meilleurs plugs de France, testes et approuves par nos equipes 💯\n\n"
+            "Pour acceder au bot, tu dois etre abonne a notre canal :\n\n"
+            "1️⃣ Abonne-toi au canal\n"
+            "2️⃣ Clique sur ✅ Verifier mon abonnement"
+        ),
+        reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
     )
-    return WAIT_CODE
+    return ConversationHandler.END
 
 async def check_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    uid  = update.effective_user.id
-    code = update.message.text.strip()
-    if code == ADMIN_CODE:
-        ADMIN_USERS.add(uid)
-        UNLOCKED_USERS.add(uid)
-        await update.message.reply_text("✅ Code admin accepte !")
-        await show_menu(update, context)
-        return ConversationHandler.END
-    elif code.upper() == SECRET_CODE:
-        UNLOCKED_USERS.add(uid)
-        await update.message.reply_text("✅ Acces accorde ! Bienvenue 🍀")
-        await show_menu(update, context)
-        return ConversationHandler.END
-    else:
-        await update.message.reply_text("❌ Code incorrect. Reessaie :")
-        return WAIT_CODE
+    # Garde pour compatibilite mais plus utilise
+    return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
@@ -672,6 +685,19 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
+    elif action == "check_sub":
+        uid = query.from_user.id
+        if await is_subscribed(uid, context):
+            UNLOCKED_USERS.add(uid)
+            await query.message.delete()
+            await show_menu(update, context)
+        else:
+            keyboard = [
+                [InlineKeyboardButton("📢 Rejoindre le canal", url="https://t.me/LaNoteVerte")],
+                [InlineKeyboardButton("✅ Verifier mon abonnement", callback_data="check_sub")],
+            ]
+            await query.answer("❌ Tu n'es pas encore abonne !", show_alert=True)
+
     elif action == "home":
         await show_menu(update, context)
 
@@ -685,7 +711,7 @@ def main():
 
     code_conv = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
-        states={WAIT_CODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, check_code)]},
+        states={},
         fallbacks=[CommandHandler("start", start)],
         allow_reentry=True,
     )
@@ -765,7 +791,7 @@ def main():
     app.add_handler(CallbackQueryHandler(show_departements,  pattern="^region_"))
     app.add_handler(CallbackQueryHandler(show_profils,       pattern="^dep_"))
     app.add_handler(CallbackQueryHandler(show_profil_detail, pattern="^profil_"))
-    app.add_handler(CallbackQueryHandler(handle_menu_cb,     pattern="^(menu_|home|promo_|certif_f_|certif_choix|certif_particulier|certif_plug)"))
+    app.add_handler(CallbackQueryHandler(handle_menu_cb,     pattern="^(menu_|home|promo_|certif_f_|certif_choix|certif_particulier|certif_plug|check_sub)"))
 
     print("🤖 La Note Verte - Bot lance !")
     app.run_polling()
