@@ -568,15 +568,21 @@ def main():
         allow_reentry=True,
     )
 
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, admin_code_handler), group=1)
     app.add_handler(code_conv)
     app.add_handler(certif_conv)
     app.add_handler(ajout_conv)
     app.add_handler(suppr_conv)
     app.add_handler(ajout_skam_conv)
     app.add_handler(ajout_promo_conv)
+    admin_conv = ConversationHandler(
+        entry_points=[CommandHandler("admin", admin_panel)],
+        states={ADMIN_WAIT: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_code_check)]},
+        fallbacks=[CommandHandler("annuler", cancel)],
+        allow_reentry=True,
+    )
+    app.add_handler(admin_conv)
+
     app.add_handler(CommandHandler("menu",        menu_cmd))
-    app.add_handler(CommandHandler("admin",       admin_panel))
     app.add_handler(CommandHandler("liste_dep",   liste_dep))
     app.add_handler(CommandHandler("stats",       stats))
     app.add_handler(CommandHandler("get_my_id",   get_my_id))
