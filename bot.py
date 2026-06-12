@@ -461,11 +461,22 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "menu_certified": CONFIG.get("texte_certified", ""),
         "menu_contact":   CONFIG.get("texte_contact", ""),
 
-        "menu_concours":  "⚙️⏳⌛️\n\n*Concours en cours de preparation*\n\nReviens bientot !",
+        "menu_concours":   None,
     }
 
-    if action in static:
+    if action in static and static[action] is not None:
         await query.edit_message_text(static[action], reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
+
+    elif action == "menu_concours":
+        keyboard = [
+            [InlineKeyboardButton("📸 Abonne-toi sur Instagram", url="https://www.instagram.com/stoneboy_420?igsh=N3JlZ3hwenJ1b3Q2&utm_source=qr")],
+            [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
+        ]
+        await query.edit_message_text(
+            "⚙️⏳⌛️\n\n*Concours en cours de preparation...*\n\nAbonne-toi pour ne rien louper !",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
 
     elif action == "menu_reseaux":
         keyboard = [
