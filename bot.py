@@ -22,6 +22,33 @@ DEPARTEMENTS = load_json("departements.json")
 PROFILS      = load_json("profils.json")
 CONFIG       = load_json("config.json")
 SKAM         = load_json("skam.json")
+
+IMAGES = {
+    "certified": "https://i.ibb.co/zTGfyh2b/photo-6-2026-06-12-18-58-25.jpg",
+    "skam":      "https://i.ibb.co/gMLvc6mZ/photo-2-2026-06-12-18-58-25.jpg",
+    "concours":  "https://i.ibb.co/gLkR9f94/photo-4-2026-06-12-18-58-25.jpg",
+    "promo":     "https://i.ibb.co/GvMNprRD/photo-1-2026-06-12-18-58-25.jpg",
+    "reseaux":   "https://i.ibb.co/xqxkWwwz/photo-3-2026-06-12-18-58-25.jpg",
+    "menu":      "https://i.ibb.co/k6gHmKZj/photo-5-2026-06-12-18-58-25.jpg",
+}
+
+async def send_photo_then_text(chat_id, image_key, text, keyboard, context):
+    """Envoie une photo puis un message avec boutons"""
+    try:
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=IMAGES[image_key],
+            caption=text,
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
 PROMOS       = load_json("promos.json")
 
 SECRET_CODE   = "STONNABIS"
@@ -84,10 +111,13 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🏅 Se faire certifier / Certifier son plug", callback_data="certif_choix")],
     ]
     text = f"*{CONFIG['nom_bot']}*\n\n{CONFIG['description']}\n\nChoisis une option :"
+    chat_id = update.effective_chat.id
     if update.message:
-        await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        await send_photo_then_text(chat_id, "menu", text, keyboard, context)
     else:
-        await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        # Pour les retours via callback, on envoie un nouveau message avec photo
+        await update.callback_query.message.delete()
+        await send_photo_then_text(chat_id, "menu", text, keyboard, context)
 
 # ── /start ────────────────────────────────────────────────────────────────────
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -478,11 +508,10 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("📦 Envoi Postal",        callback_data="certif_f_postale")],
             [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
         ]
-        await query.edit_message_text(
+        await query.message.delete()
+        await send_photo_then_text(query.message.chat.id, "certified",
             "✅ *Liste Certified*\n\nNos profils testes et approuves par nos equipes 💯\n\nChoisis ton mode de livraison :",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown"
-        )
+            keyboard, context)
 
     elif action in ("certif_f_meetup", "certif_f_postale"):
         filtre = "meetup" if action == "certif_f_meetup" else "postale"
@@ -512,11 +541,10 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("📸 Abonne-toi sur Instagram", url="https://www.instagram.com/stoneboy_420?igsh=N3JlZ3hwenJ1b3Q2&utm_source=qr")],
             [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
         ]
-        await query.edit_message_text(
+        await query.message.delete()
+        await send_photo_then_text(query.message.chat.id, "concours",
             "⚙️⏳⌛️\n\n*Concours en cours de preparation...*\n\nAbonne-toi pour ne rien louper !",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown"
-        )
+            keyboard, context)
 
     elif action == "menu_reseaux":
         keyboard = [
@@ -525,7 +553,10 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🔒 Signal",    url="https://signal.me/#eu/cURmi5ud2CX6zMtp-ho4ORADyPglm45d6H5F13l7Su627Zip-_BJ7J2GD23_coWj")],
             [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
         ]
-        await query.edit_message_text("🌐 *Nos Reseaux*\n\nChoisis ta plateforme :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        await query.message.delete()
+        await send_photo_then_text(query.message.chat.id, "reseaux",
+            "🌐 *Nos Reseaux*\n\nChoisis ta plateforme :",
+            keyboard, context)
 
     elif action == "menu_skam":
         if not SKAM:
@@ -533,7 +564,10 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         keyboard = [[InlineKeyboardButton(m["nom"], url=m["lien"])] for m in SKAM]
         keyboard.append([InlineKeyboardButton("🏠 Accueil", callback_data="home")])
-        await query.edit_message_text("📋 *Liste SK-AM*\n\nClique sur le compte SK-AM et signal le :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        await query.message.delete()
+        await send_photo_then_text(query.message.chat.id, "skam",
+            "📋 *Liste SK-AM*\n\nClique sur le compte SK-AM et signal le :",
+            keyboard, context)
 
     elif action == "menu_promo":
         if not PROMOS:
@@ -541,7 +575,10 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         keyboard = [[InlineKeyboardButton(f"{p['emoji']} {p['nom']}", callback_data=f"promo_{i}")] for i, p in enumerate(PROMOS)]
         keyboard.append([InlineKeyboardButton("🏠 Accueil", callback_data="home")])
-        await query.edit_message_text("🏷️ *Codes Promo - Nos Partenaires*\n\nChoisis un partenaire :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        await query.message.delete()
+        await send_photo_then_text(query.message.chat.id, "promo",
+            "🏷️ *Codes Promo - Nos Partenaires*\n\nChoisis un partenaire :",
+            keyboard, context)
 
     elif action.startswith("promo_"):
         idx = int(action.replace("promo_", ""))
