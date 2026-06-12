@@ -73,7 +73,7 @@ async def notify_admin(context, text):
 async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("✅ Liste Certified", callback_data="menu_certified"),
-         InlineKeyboardButton("📞 Contact",         callback_data="menu_contact")],
+         InlineKeyboardButton("📞 Contact",         url="https://t.me/stoneboy_420")],
         [InlineKeyboardButton("📋 Liste SK-AM",     callback_data="menu_skam"),
          InlineKeyboardButton("🌐 Nos Reseaux",     callback_data="menu_reseaux")],
         [InlineKeyboardButton("🎁 Concours",        callback_data="menu_concours"),
