@@ -1,32 +1,21 @@
 {
   "75": [
     {
-      "nom": "Alex P.",
-      "ville": "Paris 11e",
-      "certified": true,
-      "description": "Disponible sur Paris. Sérieux et réactif.",
-      "contact": "@alex_paris",
-      "lien": ""
-    },
-    {
       "nom": "Jordan M.",
       "ville": "Paris 18e",
       "certified": false,
       "description": "Profil actif depuis 2023.",
       "contact": "@jordan_75",
       "lien": ""
-    }
-  ],
-  "13": [
+    },
     {
-      "nom": "Karim B.",
-      "ville": "Marseille",
+      "nom": "Lala Nation du Lait",
       "certified": true,
-      "description": "Top profil Marseille. Certifié depuis 6 mois.",
-      "contact": "@karim_13",
-      "lien": ""
+      "contact": "https://t.me/c/3894717855/4",
+      "secteur": "Secteur IDF + Postale"
     }
   ],
+  "13": [],
   "69": [
     {
       "nom": "Sarah L.",
@@ -37,17 +26,15 @@
       "lien": ""
     }
   ],
-  "33": [
+  "33": [],
+  "59": [
     {
-      "nom": "Tom R.",
-      "ville": "Bordeaux",
+      "nom": "Dr Speed Nord",
       "certified": true,
-      "description": "Présent sur Bordeaux et environs.",
-      "contact": "@tom_bdx",
-      "lien": ""
+      "contact": "https://calendula-cosmos-jfcl76v.dappling.network/",
+      "secteur": "Secteur 59/62 + Postale"
     }
   ],
-  "59": [],
   "31": [],
   "06": [],
   "67": [],
