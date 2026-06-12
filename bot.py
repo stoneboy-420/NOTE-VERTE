@@ -78,6 +78,7 @@ async def check_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if code == ADMIN_CODE:
         ADMIN_USERS.add(uid)
         UNLOCKED_USERS.add(uid)
+        context.user_data.pop("waiting_admin_code", None)
         await update.message.reply_text("✅ Code admin accepté ! Tape /admin pour gérer le bot.")
         await show_menu(update, context)
         return ConversationHandler.END
@@ -89,6 +90,52 @@ async def check_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("❌ Code incorrect. Réessaie :")
         return WAIT_CODE
+
+async def admin_code_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Gère le code admin quand l'utilisateur est déjà connecté avec STONNABIS"""
+    uid = update.effective_user.id
+    if not context.user_data.get("waiting_admin_code"):
+        return
+    code = update.message.text.strip()
+    if code == ADMIN_CODE:
+        ADMIN_USERS.add(uid)
+        context.user_data.pop("waiting_admin_code", None)
+        await update.message.reply_text(
+            "✅ *Accès admin accordé !*
+
+"
+            "⚙️ *Panel Admin — La Note Verte*
+
+"
+            "*Profils :*
+"
+            "➕ /ajout — Ajouter un profil
+"
+            "🗑️ /suppr — Supprimer par nom
+"
+            "📋 /liste\_dep XX — Voir un département
+
+"
+            "*SK-AM :*
+"
+            "➕ /ajout\_skam — Ajouter un membre
+"
+            "🗑️ /suppr\_skam — Supprimer un membre
+
+"
+            "*Promos :*
+"
+            "➕ /ajout\_promo — Ajouter un partenaire
+"
+            "🗑️ /suppr\_promo — Supprimer un partenaire
+
+"
+            "📊 /stats — Statistiques",
+            parse_mode="Markdown"
+        )
+    else:
+        context.user_data.pop("waiting_admin_code", None)
+        await update.message.reply_text("❌ Code incorrect.")
 
 # ── Menu ─────────────────────────────────────────────────────────────────────
 async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -557,6 +604,12 @@ def main():
         fallbacks=[CommandHandler("annuler", cancel)],
         allow_reentry=True,
     )
+
+    # Handler pour code admin en cours de session
+    app.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        admin_code_handler
+    ), group=1)
 
     app.add_handler(code_conv)
     app.add_handler(certif_conv)
