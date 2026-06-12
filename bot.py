@@ -487,14 +487,14 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         idx = int(action.replace("promo_", ""))
         p   = PROMOS[idx]
         keyboard = [
-            [InlineKeyboardButton("🔗 Visiter le site", url=p["lien"])],
+            [InlineKeyboardButton("📩 Contacter sur Telegram", url=p["lien"])],
             [InlineKeyboardButton("◀️ Partenaires", callback_data="menu_promo")],
         ]
+        text = f"{p['emoji']} *{p['nom']}*\n\n{p['reduction']}"
+        if p.get("code"):
+            text += f"\n\n🏷️ Code promo :\n`{p['code']}`\n\n(Appuie longuement pour copier)"
         await query.edit_message_text(
-            f"{p['emoji']} *{p['nom']}*\n\n"
-            f"💰 {p['reduction']}\n\n"
-            f"🏷️ Code promo :\n`{p['code']}`\n\n"
-            f"(Appuie longuement sur le code pour le copier)",
+            text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
