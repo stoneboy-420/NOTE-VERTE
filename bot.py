@@ -600,7 +600,10 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif action == "menu_skam":
         if not SKAM:
-            await query.edit_message_text("📋 *Liste SK-AM*\n\nAucun membre pour le moment.", reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
+            try:
+                await query.edit_message_text("📋 *Liste SK-AM*\n\nAucun membre pour le moment.", reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
+            except Exception:
+                await query.message.reply_text("📋 *Liste SK-AM*\n\nAucun membre pour le moment.", reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
             return
         keyboard = [[InlineKeyboardButton(m["nom"], url=m["lien"])] for m in SKAM]
         keyboard.append([InlineKeyboardButton("🏠 Accueil", callback_data="home")])
@@ -611,7 +614,10 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif action == "menu_promo":
         if not PROMOS:
-            await query.edit_message_text("🏷️ *Codes Promo*\n\nAucun partenaire pour le moment.", reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
+            try:
+                await query.edit_message_text("🏷️ *Codes Promo*\n\nAucun partenaire pour le moment.", reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
+            except Exception:
+                await query.message.reply_text("🏷️ *Codes Promo*\n\nAucun partenaire pour le moment.", reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
             return
         keyboard = [[InlineKeyboardButton(f"{p['emoji']} {p['nom']}", callback_data=f"promo_{i}")] for i, p in enumerate(PROMOS)]
         keyboard.append([InlineKeyboardButton("🏠 Accueil", callback_data="home")])
@@ -630,8 +636,14 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = f"{p['emoji']} *{p['nom']}*\n\n{p['reduction']}"
         if p.get("code"):
             text += f"\n\n🏷️ Code promo :\n`{p['code']}`\n\n(Appuie longuement pour copier)"
-        await query.edit_message_text(
-            text,
+        # Toujours supprimer et renvoyer — évite tous les conflits photo/texte
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text=text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
