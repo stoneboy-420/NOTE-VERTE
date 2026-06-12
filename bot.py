@@ -445,9 +445,12 @@ async def show_profil_detail(update: Update, context: ContextTypes.DEFAULT_TYPE)
     lines = []
     if p.get("certified"): lines.append("✅ *CERTIFIED*")
     lines.append(f"👤 *{p['nom']}*")
-    lines.append(f"({dep_num})")
-    if p.get("contact"):   lines.append(f"\n🔗 {p['contact']}")
-    keyboard = [[InlineKeyboardButton("◀️ Retour", callback_data=f"dep_{dep_num}")]]
+    if p.get("secteur"):   lines.append(f"📍 {p['secteur']}")
+    else:                  lines.append(f"📍 Departement {dep_num}")
+    keyboard = []
+    if p.get("contact"):
+        keyboard.append([InlineKeyboardButton("🔗 Acceder au profil", url=p["contact"])])
+    keyboard.append([InlineKeyboardButton("◀️ Retour", callback_data=f"dep_{dep_num}")])
     await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
 # ── Pages menu ─────────────────────────────────────────────────────────────────

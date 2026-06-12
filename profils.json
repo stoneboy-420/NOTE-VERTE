@@ -51,5 +51,25 @@
   "31": [],
   "06": [],
   "67": [],
-  "44": []
+  "44": [],
+  "74": [
+    {
+      "nom": "Terpy Family74",
+      "certified": true,
+      "contact": "https://t.me/Terpyfamily74_bot",
+      "secteur": "Secteur 74"
+    },
+    {
+      "nom": "Fasthouse Coffee",
+      "certified": true,
+      "contact": "https://linktr.ee/FHCoffee",
+      "secteur": "Secteur 74 / Suisse"
+    },
+    {
+      "nom": "SharkKush74",
+      "certified": true,
+      "contact": "https://tutuduanyu.org/joinchat/o50ruZARkkB5kzq-GXVetg",
+      "secteur": "Secteur 74"
+    }
+  ]
 }
