@@ -460,12 +460,21 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     static = {
         "menu_certified": CONFIG.get("texte_certified", ""),
         "menu_contact":   CONFIG.get("texte_contact", ""),
-        "menu_reseaux":   CONFIG.get("texte_reseaux", ""),
+
         "menu_concours":  "⚙️⏳⌛️\n\n*Concours en cours de preparation*\n\nReviens bientot !",
     }
 
     if action in static:
         await query.edit_message_text(static[action], reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
+
+    elif action == "menu_reseaux":
+        keyboard = [
+            [InlineKeyboardButton("📸 Instagram", url="https://www.instagram.com/stoneboy_420?igsh=N3JlZ3hwenJ1b3Q2&utm_source=qr")],
+            [InlineKeyboardButton("💬 Telegram",  url="https://t.me/stoneboy_420")],
+            [InlineKeyboardButton("🔒 Signal",    url="https://signal.me/#eu/cURmi5ud2CX6zMtp-ho4ORADyPglm45d6H5F13l7Su627Zip-_BJ7J2GD23_coWj")],
+            [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
+        ]
+        await query.edit_message_text("🌐 *Nos Reseaux*\n\nChoisis ta plateforme :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
     elif action == "menu_skam":
         if not SKAM:
