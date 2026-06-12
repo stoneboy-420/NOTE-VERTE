@@ -1,0 +1,5 @@
+[
+  {"nom": "420 Store", "emoji": "🛍️", "code": "VERT420", "reduction": "-15% sur toute la boutique", "lien": "https://420store.fr"},
+  {"nom": "GreenLeaf",  "emoji": "🌿", "code": "NOTEVERTE", "reduction": "-10% dès 30€ d'achat",      "lien": "https://greenleaf.fr"},
+  {"nom": "HempShop",   "emoji": "🏪", "code": "STONNABIS", "reduction": "Livraison offerte",           "lien": "https://hempshop.fr"}
+]
