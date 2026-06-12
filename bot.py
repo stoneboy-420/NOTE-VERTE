@@ -443,7 +443,10 @@ async def geo_start_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         regions.setdefault(d["region"], []).append(n)
     keyboard = [[InlineKeyboardButton(f"📌 {r}", callback_data=f"region_{r}")] for r in sorted(regions)]
     keyboard.append([InlineKeyboardButton("🏠 Retour", callback_data="home")])
-    await query.edit_message_text("🗺️ *Choisis ta region :*", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    try:
+        await query.edit_message_text("🗺️ *Choisis ta region :*", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    except Exception:
+        await query.message.reply_text("🗺️ *Choisis ta region :*", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
 async def show_departements(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -452,7 +455,10 @@ async def show_departements(update: Update, context: ContextTypes.DEFAULT_TYPE):
     deps   = sorted([(n, d["nom"]) for n, d in DEPARTEMENTS.items() if d["region"] == region])
     keyboard = [[InlineKeyboardButton(f"{n} - {nom}", callback_data=f"dep_{n}")] for n, nom in deps]
     keyboard.append([InlineKeyboardButton("◀️ Regions", callback_data="geo_start")])
-    await query.edit_message_text(f"📍 *{region}*\nChoisis ton departement :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    try:
+        await query.edit_message_text(f"📍 *{region}*\nChoisis ton departement :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    except Exception:
+        await query.message.reply_text(f"📍 *{region}*\nChoisis ton departement :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
 async def show_profils(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query   = update.callback_query
@@ -463,11 +469,17 @@ async def show_profils(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ps      = PROFILS.get(dep_num, [])
     if not ps:
         keyboard = [[InlineKeyboardButton("◀️ Retour", callback_data=f"region_{region}")]]
-        await query.edit_message_text(f"😕 Aucun profil pour *{dep_nom}* ({dep_num}).\n\nHesite pas a contacter nos equipes ! 🍀", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        try:
+            await query.edit_message_text(f"😕 Aucun profil pour *{dep_nom}* ({dep_num}).\n\nHesite pas a contacter nos equipes ! 🍀", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        except Exception:
+            await query.message.reply_text(f"😕 Aucun profil pour *{dep_nom}* ({dep_num}).\n\nHesite pas a contacter nos equipes ! 🍀", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
         return
     keyboard = [[InlineKeyboardButton(f"{'✅ ' if p.get('certified') else ''}{p['nom']}", callback_data=f"profil_{dep_num}_{i}")] for i, p in enumerate(ps)]
     keyboard.append([InlineKeyboardButton("◀️ Retour", callback_data=f"region_{region}")])
-    await query.edit_message_text(f"👥 *{dep_nom} ({dep_num})*\n{len(ps)} profil(s)", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    try:
+        await query.edit_message_text(f"👥 *{dep_nom} ({dep_num})*\n{len(ps)} profil(s)", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    except Exception:
+        await query.message.reply_text(f"👥 *{dep_nom} ({dep_num})*\n{len(ps)} profil(s)", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
 async def show_profil_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -483,7 +495,10 @@ async def show_profil_detail(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if p.get("contact"):
         keyboard.append([InlineKeyboardButton("🔗 Acceder au profil", url=p["contact"])])
     keyboard.append([InlineKeyboardButton("◀️ Retour", callback_data=f"dep_{dep_num}")])
-    await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    try:
+        await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    except Exception:
+        await query.message.reply_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
 # ── Pages menu ─────────────────────────────────────────────────────────────────
 async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -500,7 +515,10 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
 
     if action in static and static[action] is not None:
-        await query.edit_message_text(static[action], reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
+        try:
+            await query.edit_message_text(static[action], reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
+        except Exception:
+            await query.message.reply_text(static[action], reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
 
     elif action == "menu_certified":
         keyboard = [
@@ -522,7 +540,10 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("◀️ Retour", callback_data="menu_certified")],
                 [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
             ]
-            await query.edit_message_text(f"✅ *{label}*\n\nAucun profil disponible pour ce mode.", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+            await query.message.delete()
+            await send_photo_then_text(query.message.chat.id, "certified",
+                f"✅ *{label}*\n\nAucun profil disponible pour ce mode.",
+                keyboard, context)
             return
         keyboard = []
         for dep, i, p in certified_list:
@@ -530,11 +551,10 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard.append([InlineKeyboardButton(f"✅ {p['nom']} — {secteur}", callback_data=f"profil_{dep}_{i}")])
         keyboard.append([InlineKeyboardButton("◀️ Retour", callback_data="menu_certified")])
         keyboard.append([InlineKeyboardButton("🏠 Accueil", callback_data="home")])
-        await query.edit_message_text(
+        await query.message.delete()
+        await send_photo_then_text(query.message.chat.id, "certified",
             f"✅ *{label}*\n\n{len(certified_list)} profil(s) disponible(s) :",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown"
-        )
+            keyboard, context)
 
     elif action == "menu_concours":
         keyboard = [
