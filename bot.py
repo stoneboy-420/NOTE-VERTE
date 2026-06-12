@@ -42,6 +42,8 @@ ADMIN_USERS    = set()
     ADMIN_WAIT,
 ) = range(20)
 
+CERTIF_FILTRE_TYPE, CERTIF_FILTRE_DEP = 20, 21
+
 CERTIF_QUESTIONS = [
     ("pseudo",    "👤 Ton *pseudo Telegram* ?",       "@ton_pseudo"),
     ("plug_nom",  "🏷️ *Nom du plug* a certifier ?",   "Nom ou pseudo"),
@@ -471,17 +473,36 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(static[action], reply_markup=InlineKeyboardMarkup(back), parse_mode="Markdown")
 
     elif action == "menu_certified":
-        certified_list = [(dep, i, p) for dep, ps in PROFILS.items() for i, p in enumerate(ps) if p.get("certified")]
+        keyboard = [
+            [InlineKeyboardButton("🚗 Livraison / Meet Up", callback_data="certif_f_meetup")],
+            [InlineKeyboardButton("📦 Envoi Postal",        callback_data="certif_f_postale")],
+            [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
+        ]
+        await query.edit_message_text(
+            "✅ *Liste Certified*\n\nNos profils testes et approuves par nos equipes 💯\n\nChoisis ton mode de livraison :",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
+
+    elif action in ("certif_f_meetup", "certif_f_postale"):
+        filtre = "meetup" if action == "certif_f_meetup" else "postale"
+        label  = "🚗 Livraison / Meet Up" if filtre == "meetup" else "📦 Envoi Postal"
+        certified_list = [(dep, i, p) for dep, ps in PROFILS.items() for i, p in enumerate(ps) if p.get("certified") and p.get("livraison") == filtre]
         if not certified_list:
-            await query.edit_message_text("✅ *Liste Certified*\n\nAucun profil certifie pour le moment.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Accueil", callback_data="home")]]), parse_mode="Markdown")
+            keyboard = [
+                [InlineKeyboardButton("◀️ Retour", callback_data="menu_certified")],
+                [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
+            ]
+            await query.edit_message_text(f"✅ *{label}*\n\nAucun profil disponible pour ce mode.", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
             return
         keyboard = []
         for dep, i, p in certified_list:
             secteur = p.get("secteur", f"Dep. {dep}")
             keyboard.append([InlineKeyboardButton(f"✅ {p['nom']} — {secteur}", callback_data=f"profil_{dep}_{i}")])
+        keyboard.append([InlineKeyboardButton("◀️ Retour", callback_data="menu_certified")])
         keyboard.append([InlineKeyboardButton("🏠 Accueil", callback_data="home")])
         await query.edit_message_text(
-            f"✅ *Liste Certified*\n\n{len(certified_list)} profil(s) certifie(s) par nos equipes :",
+            f"✅ *{label}*\n\n{len(certified_list)} profil(s) disponible(s) :",
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
@@ -631,7 +652,7 @@ def main():
     app.add_handler(CallbackQueryHandler(show_departements,  pattern="^region_"))
     app.add_handler(CallbackQueryHandler(show_profils,       pattern="^dep_"))
     app.add_handler(CallbackQueryHandler(show_profil_detail, pattern="^profil_"))
-    app.add_handler(CallbackQueryHandler(handle_menu_cb,     pattern="^(menu_|home|promo_)"))
+    app.add_handler(CallbackQueryHandler(handle_menu_cb,     pattern="^(menu_|home|promo_|certif_f_)"))
 
     print("🤖 La Note Verte - Bot lance !")
     app.run_polling()

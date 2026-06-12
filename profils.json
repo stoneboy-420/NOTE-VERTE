@@ -1,38 +1,23 @@
 {
   "75": [
     {
-      "nom": "Jordan M.",
-      "ville": "Paris 18e",
-      "certified": false,
-      "description": "Profil actif depuis 2023.",
-      "contact": "@jordan_75",
-      "lien": ""
-    },
-    {
       "nom": "Lala Nation du Lait",
       "certified": true,
       "contact": "https://t.me/c/3894717855/4",
-      "secteur": "Secteur IDF + Postale"
+      "secteur": "Secteur IDF + Postale",
+      "livraison": "postale"
     }
   ],
   "13": [],
-  "69": [
-    {
-      "nom": "Sarah L.",
-      "ville": "Lyon",
-      "certified": false,
-      "description": "Nouvelle sur la plateforme. Très motivée.",
-      "contact": "@sarah_lyon",
-      "lien": ""
-    }
-  ],
+  "69": [],
   "33": [],
   "59": [
     {
       "nom": "Dr Speed Nord",
       "certified": true,
       "contact": "https://calendula-cosmos-jfcl76v.dappling.network/",
-      "secteur": "Secteur 59/62 + Postale"
+      "secteur": "Secteur 59/62 + Postale",
+      "livraison": "postale"
     }
   ],
   "31": [],
@@ -44,19 +29,22 @@
       "nom": "Terpy Family74",
       "certified": true,
       "contact": "https://t.me/Terpyfamily74_bot",
-      "secteur": "Secteur 74"
+      "secteur": "Secteur 74",
+      "livraison": "meetup"
     },
     {
       "nom": "Fasthouse Coffee",
       "certified": true,
       "contact": "https://linktr.ee/FHCoffee",
-      "secteur": "Secteur 74 / Suisse"
+      "secteur": "Secteur 74 / Suisse",
+      "livraison": "meetup"
     },
     {
       "nom": "SharkKush74",
       "certified": true,
       "contact": "https://tutuduanyu.org/joinchat/o50ruZARkkB5kzq-GXVetg",
-      "secteur": "Secteur 74"
+      "secteur": "Secteur 74",
+      "livraison": "meetup"
     }
   ]
 }
