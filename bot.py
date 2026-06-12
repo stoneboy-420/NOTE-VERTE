@@ -482,7 +482,7 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         keyboard = [[InlineKeyboardButton(m["nom"], url=m["lien"])] for m in SKAM]
         keyboard.append([InlineKeyboardButton("🏠 Accueil", callback_data="home")])
-        await query.edit_message_text("📋 *Liste SK-AM*\n\nClique sur un membre :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        await query.edit_message_text("📋 *Liste SK-AM*\n\nClique sur le compte SK-AM et signal le :", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
     elif action == "menu_promo":
         if not PROMOS:
