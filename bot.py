@@ -40,6 +40,8 @@ ADMIN_USERS    = set()
     PROMO_NOM, PROMO_EMOJI, PROMO_CODE, PROMO_REDUC, PROMO_LIEN,
 ) = range(19)
 
+ADMIN_WAIT = 99
+
 CERTIF_QUESTIONS = [
     ("pseudo",    "👤 Ton *pseudo Telegram* ?",       "@ton_pseudo"),
     ("plug_nom",  "🏷️ *Nom du plug* a certifier ?",   "Nom ou pseudo"),
