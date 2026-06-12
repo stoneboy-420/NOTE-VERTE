@@ -153,10 +153,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         caption=(
             "🍀 *La Note Verte*\n\n"
             "👋 Salut !\n\n"
-            "Ici on certifie les meilleurs plugs de France, testes et approuves par nos equipes 💯\n\n"
             "Pour acceder au bot, tu dois etre abonne a notre canal :\n\n"
             "1️⃣ Abonne-toi au canal\n"
-            "2️⃣ Clique sur ✅ Verifier mon abonnement"
+            "2️⃣ Clique sur ✅ Verifier mon abonnement\n"
+            "3️⃣ Clique sur /start"
         ),
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
