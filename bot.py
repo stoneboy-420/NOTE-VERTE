@@ -487,7 +487,7 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif action in ("certif_f_meetup", "certif_f_postale"):
         filtre = "meetup" if action == "certif_f_meetup" else "postale"
         label  = "🚗 Livraison / Meet Up" if filtre == "meetup" else "📦 Envoi Postal"
-        certified_list = [(dep, i, p) for dep, ps in PROFILS.items() for i, p in enumerate(ps) if p.get("certified") and p.get("livraison") == filtre]
+        certified_list = [(dep, i, p) for dep, ps in PROFILS.items() for i, p in enumerate(ps) if p.get("certified") and p.get("livraison") in (filtre, "les deux")]
         if not certified_list:
             keyboard = [
                 [InlineKeyboardButton("◀️ Retour", callback_data="menu_certified")],
