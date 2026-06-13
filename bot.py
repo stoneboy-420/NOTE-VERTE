@@ -629,14 +629,18 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif action.startswith("promo_"):
         idx = int(action.replace("promo_", ""))
         p   = PROMOS[idx]
-        keyboard = [
-            [InlineKeyboardButton("📩 Contacter sur Telegram", url=p["lien"])],
-            [InlineKeyboardButton("◀️ Partenaires", callback_data="menu_promo")],
-        ]
+        # Boutons dynamiques selon les liens disponibles
+        btns = []
+        if p.get("lien_insta"):
+            btns.append([InlineKeyboardButton("📸 Instagram", url=p["lien_insta"])])
+        if p.get("lien"):
+            label = "📩 Contacter sur Telegram" if "t.me" in p["lien"] else "🔗 Visiter le site"
+            btns.append([InlineKeyboardButton(label, url=p["lien"])])
+        btns.append([InlineKeyboardButton("◀️ Partenaires", callback_data="menu_promo")])
+        keyboard = btns
         text = f"{p['emoji']} *{p['nom']}*\n\n{p['reduction']}"
         if p.get("code"):
             text += f"\n\n🏷️ Code promo :\n`{p['code']}`\n\n(Appuie longuement pour copier)"
-        # Toujours supprimer et renvoyer — évite tous les conflits photo/texte
         try:
             await query.message.delete()
         except Exception:
