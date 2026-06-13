@@ -134,5 +134,15 @@
       "secteur": "Secteur 74 / Suisse",
       "livraison": "meetup"
     }
+  ],
+  "BCN": [
+    {
+      "nom": "Havenue.fr",
+      "certified": true,
+      "contact": "https://callup.luffa.im/c/Z2nL3wXcZD2",
+      "lien_insta": "https://www.instagram.com/havenue.fr",
+      "secteur": "Secteur Barcelone + Postale",
+      "livraison": "les deux"
+    }
   ]
 }

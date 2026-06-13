@@ -506,6 +506,8 @@ async def show_profil_detail(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if p.get("secteur"):   lines.append(f"📍 {p['secteur']}")
     else:                  lines.append(f"📍 Departement {dep_num}")
     keyboard = []
+    if p.get("lien_insta"):
+        keyboard.append([InlineKeyboardButton("📸 Instagram", url=p["lien_insta"])])
     if p.get("contact"):
         keyboard.append([InlineKeyboardButton("🔗 Acceder au profil", url=p["contact"])])
     keyboard.append([InlineKeyboardButton("◀️ Retour", callback_data=f"dep_{dep_num}")])

@@ -406,5 +406,9 @@
   "CH": {
     "nom": "Suisse",
     "region": "International"
+  },
+  "BCN": {
+    "nom": "Barcelone",
+    "region": "International"
   }
 }
