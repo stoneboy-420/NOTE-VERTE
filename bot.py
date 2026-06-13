@@ -109,6 +109,7 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
          InlineKeyboardButton("🏷️ Code Promo",      callback_data="menu_promo")],
         [InlineKeyboardButton("📍 Trouver un profil pres de moi", callback_data="geo_start")],
         [InlineKeyboardButton("🏅 Se faire certifier / Certifier son plug", callback_data="certif_choix")],
+        [InlineKeyboardButton("🛒 Shop — La Note Verte", callback_data="shop_choix")],
     ]
     text = f"*{CONFIG['nom_bot']}*\n\n{CONFIG['description']}\n\nChoisis une option :"
     chat_id = update.effective_chat.id
@@ -759,6 +760,86 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown"
             )
 
+    elif action == "shop_choix":
+        keyboard = [
+            [InlineKeyboardButton("🔌 Je suis un plug / Pro", callback_data="shop_plug")],
+            [InlineKeyboardButton("🛍️ Je suis un particulier",  callback_data="shop_part")],
+            [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
+        ]
+        try:
+            await query.edit_message_text(
+                "🛒 *Shop — La Note Verte x MySippingWorld* 🫙\n\nTu es :",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+        except Exception:
+            await query.message.delete()
+            await context.bot.send_message(
+                chat_id=query.message.chat.id,
+                text="🛒 *Shop — La Note Verte x MySippingWorld* 🫙\n\nTu es :",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+
+    elif action == "shop_plug":
+        keyboard = [
+            [InlineKeyboardButton("📲 Commander en DM", url="https://t.me/stoneboy_420")],
+            [InlineKeyboardButton("◀️ Retour", callback_data="shop_choix")],
+        ]
+        text = (
+            "🛒 *ESPACE SHOP — PLUGS / PROS*\n\n"
+            "Minimum par 50 sur chaque produit\n\n"
+            "⚠️ Prix en DM\n"
+            "📲 DM pour tester ton visuel\n"
+            "📲 Puis valide ta commande\n"
+            "✅ TOUT SE PASSE EN DM 📲\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "🥤 *DOUBLE CUP GRINDER*\n"
+            "💊 *Pills Box*\n"
+            "💊 *Pills Tool*\n"
+            "🍶 *Bouteille (4, 8, 16oz)*\n"
+            "🧪 *Bouteille graduée (100, 150, 200ml)*\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n"
+            "TOUS LES PRIX COMMUNIQUES DIRECTEMENT EN DM 📲\n\n"
+            "🍀 *La Note Verte x MySippingWorld* 🫙"
+        )
+        try:
+            await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        except Exception:
+            await query.message.delete()
+            await context.bot.send_message(chat_id=query.message.chat.id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+
+    elif action == "shop_part":
+        keyboard = [
+            [InlineKeyboardButton("📲 Commander en DM", url="https://t.me/stoneboy_420")],
+            [InlineKeyboardButton("◀️ Retour", callback_data="shop_choix")],
+        ]
+        text = (
+            "🛍️ *ESPACE SHOP — PARTICULIERS*\n\n"
+            "Pas de minimum de commande ✅\n"
+            "✅ TOUT SE PASSE EN DM 📲\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "🥤 *2 Double Cup* — 13,50€\n\n"
+            "🧃 *Pack Kool-Aid USA* — 10€\n"
+            "_(Sharkleberry Fin, Blue Raspberry, Black Cherry)_\n\n"
+            "📦 *Pack Curing* — 27€\n"
+            "_(2 Cup, 2 jars en verre, 1 boite hermétique)_\n\n"
+            "🎁 *Pack Promo* — 29,90€\n"
+            "_(1 Faygo Cotton Candy, 1 Faygo Firework, 1 Double Cup Noir, 1 Double Cup 20oz)_\n\n"
+            "⚡ *Pack Essentiel* — 29,90€\n"
+            "_(5 Double Cup, 2 bouteilles (4,8oz), 2 Pills Box)_\n\n"
+            "💎 *Pack Accessoires* — 35€ — ÉDITION LIMITÉE\n"
+            "_(2 Double Cup, 3 bouteilles (4,8,16oz), 3 jars en verre, 1 boite hermétique, 2 Pills Box)_\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n"
+            "TOUT SE PASSE EN DM 📲\n\n"
+            "🍀 *La Note Verte x MySippingWorld* 🫙"
+        )
+        try:
+            await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        except Exception:
+            await query.message.delete()
+            await context.bot.send_message(chat_id=query.message.chat.id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+
     elif action == "check_sub":
         uid = query.from_user.id
         if await is_subscribed(uid, context):
@@ -865,7 +946,7 @@ def main():
     app.add_handler(CallbackQueryHandler(show_departements,  pattern="^region_"))
     app.add_handler(CallbackQueryHandler(show_profils,       pattern="^dep_"))
     app.add_handler(CallbackQueryHandler(show_profil_detail, pattern="^profil_"))
-    app.add_handler(CallbackQueryHandler(handle_menu_cb,     pattern="^(menu_|home|promo_|certif_f_|certif_choix|certif_particulier|certif_plug|check_sub)"))
+    app.add_handler(CallbackQueryHandler(handle_menu_cb,     pattern="^(menu_|home|promo_|certif_f_|certif_choix|certif_particulier|certif_plug|check_sub|shop_choix|shop_plug|shop_part)"))
 
     print("🤖 La Note Verte - Bot lance !")
     app.run_polling()
