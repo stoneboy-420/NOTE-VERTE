@@ -78,13 +78,6 @@
       "contact": "https://calendula-cosmos-jfcl76v.dappling.network/",
       "secteur": "Secteur 59/62 + Postale",
       "livraison": "les deux"
-    },
-    {
-      "nom": "Station Zaza",
-      "certified": true,
-      "contact": "https://tatokdym.org/stationzaza",
-      "secteur": "Secteur 59/62 + Postale",
-      "livraison": "les deux"
     }
   ],
   "62": [
@@ -92,13 +85,6 @@
       "nom": "Dr Speed Nord",
       "certified": true,
       "contact": "https://calendula-cosmos-jfcl76v.dappling.network/",
-      "secteur": "Secteur 59/62 + Postale",
-      "livraison": "les deux"
-    },
-    {
-      "nom": "Station Zaza",
-      "certified": true,
-      "contact": "https://tatokdym.org/stationzaza",
       "secteur": "Secteur 59/62 + Postale",
       "livraison": "les deux"
     }
@@ -138,10 +124,10 @@
   ],
   "BCN": [
     {
-      "nom": "Havenue.fr",
+      "nom": "1stavenue",
       "certified": true,
-      "contact": "https://callup.luffa.im/c/Z2nL3wXcZD2",
-      "lien_insta": "https://www.instagram.com/1stavenue_eu",
+      "contact": "https://t.me/The1stAvenueBot",
+      "lien_insta": "https://www.instagram.com/1st.avenue__eu?stkn=MTJrZzJyanhhdW05eg==",
       "secteur": "Secteur Barcelone + Postale",
       "livraison": "les deux"
     }
