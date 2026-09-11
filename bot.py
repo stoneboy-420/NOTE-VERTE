@@ -1,6 +1,7 @@
 import logging
 import json
 import os
+from datetime import date
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (Application, CommandHandler, CallbackQueryHandler,
                           MessageHandler, filters, ContextTypes, ConversationHandler)
@@ -32,6 +33,20 @@ IMAGES = {
     "menu":      "https://i.ibb.co/k6gHmKZj/photo-5-2026-06-12-18-58-25.jpg",
 }
 
+def is_new(p, days=15):
+    """Un profil est 'nouveau' s'il a ete ajoute il y a moins de <days> jours."""
+    d = p.get("date_ajout")
+    if not d:
+        return False
+    try:
+        added = date.fromisoformat(d)
+    except Exception:
+        return False
+    return (date.today() - added).days <= days
+
+def badge_new(p):
+    return "🆕 " if is_new(p) else ""
+
 async def send_photo_then_text(chat_id, image_key, text, keyboard, context):
     """Envoie une photo puis un message avec boutons"""
     try:
@@ -50,6 +65,25 @@ async def send_photo_then_text(chat_id, image_key, text, keyboard, context):
             parse_mode="Markdown"
         )
 PROMOS       = load_json("promos.json")
+
+def load_data(filename, default):
+    path = os.path.join(BASE_DIR, filename)
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return default
+    return default
+
+SUBSCRIPTIONS = load_data("subscriptions.json", {})   # { "74": [chat_id, ...], ... }
+VOTES         = load_data("votes.json", {})            # { "NomDuProfil": {"up":0,"down":0,"voters":{}} }
+
+def save_subscriptions():
+    save_json("subscriptions.json", SUBSCRIPTIONS)
+
+def save_votes():
+    save_json("votes.json", VOTES)
 
 ADMIN_CODE    = "Luphima6274"
 ADMIN_CHAT_ID = int(os.environ.get("ADMIN_CHAT_ID", "0"))
@@ -108,6 +142,7 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🎁 Concours",        callback_data="menu_concours"),
          InlineKeyboardButton("🏷️ Code Promo",      callback_data="menu_promo")],
         [InlineKeyboardButton("📍 Trouver un profil pres de moi", callback_data="geo_start")],
+        [InlineKeyboardButton("🔔 Alertes secteur", callback_data="alertes_start")],
         [InlineKeyboardButton("🏅 Se faire certifier / Certifier son plug", callback_data="certif_choix")],
     ]
     text = f"*{CONFIG['nom_bot']}*\n\n{CONFIG['description']}\n\nChoisis une option :"
@@ -291,11 +326,34 @@ async def ajout_lien(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ajout_certified(update: Update, context: ContextTypes.DEFAULT_TYPE):
     certified = update.message.text.strip().lower() in ["oui", "o", "yes"]
     dep = context.user_data["dep"]
-    profil = {"nom": context.user_data["nom"], "certified": certified, "contact": context.user_data["lien"]}
+    profil = {
+        "nom": context.user_data["nom"],
+        "certified": certified,
+        "contact": context.user_data["lien"],
+        "date_ajout": date.today().isoformat(),
+    }
     PROFILS.setdefault(dep, []).append(profil)
     save_json("profils.json", PROFILS)
     badge = "✅ Certified" if certified else "Non certified"
     await update.message.reply_text(f"✅ *{profil['nom']}* ajoute dans le {dep} — {badge}", parse_mode="Markdown")
+
+    if certified:
+        dep_nom = DEPARTEMENTS.get(dep, {}).get("nom", dep)
+        subs = SUBSCRIPTIONS.get(dep, [])
+        sent = 0
+        for chat_id in subs:
+            try:
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text=f"🔔 *Nouveau profil certifie dans le {dep} - {dep_nom} !*\n\n✅ {profil['nom']}",
+                    parse_mode="Markdown"
+                )
+                sent += 1
+            except Exception:
+                pass
+        if subs:
+            await update.message.reply_text(f"📨 {sent}/{len(subs)} abonne(s) du {dep} notifie(s).")
+
     context.user_data.clear()
     return ConversationHandler.END
 
@@ -434,13 +492,15 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     total     = sum(len(v) for v in PROFILS.values())
     certified = sum(1 for v in PROFILS.values() for p in v if p.get("certified"))
+    total_subs = len(set(uid for lst in SUBSCRIPTIONS.values() for uid in lst))
     await update.message.reply_text(
         f"📊 *Stats La Note Verte*\n\n"
         f"👥 Profils : *{total}*\n"
         f"✅ Certified : *{certified}*\n"
         f"📋 Membres SK-AM : *{len(SKAM)}*\n"
         f"🏷️ Partenaires : *{len(PROMOS)}*\n"
-        f"🔓 Connectes : *{len(UNLOCKED_USERS)}*",
+        f"🔓 Connectes : *{len(UNLOCKED_USERS)}*\n"
+        f"🔔 Abonnes alertes : *{total_subs}*",
         parse_mode="Markdown"
     )
 
@@ -487,33 +547,132 @@ async def show_profils(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             await query.message.reply_text(f"😕 Aucun profil pour *{dep_nom}* ({dep_num}).\n\nHesite pas a contacter nos equipes ! 🍀", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
         return
-    keyboard = [[InlineKeyboardButton(f"{'✅ ' if p.get('certified') else ''}{p['nom']}", callback_data=f"profil_{dep_num}_{i}")] for i, p in enumerate(ps)]
+    keyboard = [[InlineKeyboardButton(f"{badge_new(p)}{'✅ ' if p.get('certified') else ''}{p['nom']}", callback_data=f"profil_{dep_num}_{i}")] for i, p in enumerate(ps)]
     keyboard.append([InlineKeyboardButton("◀️ Retour", callback_data=f"region_{region}")])
     try:
         await query.edit_message_text(f"👥 *{dep_nom} ({dep_num})*\n{len(ps)} profil(s)", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
     except Exception:
         await query.message.reply_text(f"👥 *{dep_nom} ({dep_num})*\n{len(ps)} profil(s)", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
-async def show_profil_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    _, dep_num, idx_str = query.data.split("_", 2)
-    p = PROFILS[dep_num][int(idx_str)]
+def render_profil_detail(dep_num, idx):
+    p = PROFILS[dep_num][idx]
     lines = []
     if p.get("certified"): lines.append("✅ *CERTIFIED*")
-    lines.append(f"👤 *{p['nom']}*")
+    lines.append(f"{badge_new(p)}👤 *{p['nom']}*")
     if p.get("secteur"):   lines.append(f"📍 {p['secteur']}")
     else:                  lines.append(f"📍 Departement {dep_num}")
+    v = VOTES.get(p["nom"], {})
+    up, down = v.get("up", 0), v.get("down", 0)
+    lines.append(f"\n👍 {up}  ·  👎 {down}")
     keyboard = []
     if p.get("lien_insta"):
         keyboard.append([InlineKeyboardButton("📸 Instagram", url=p["lien_insta"])])
     if p.get("contact"):
         keyboard.append([InlineKeyboardButton("🔗 Acceder au profil", url=p["contact"])])
+    keyboard.append([
+        InlineKeyboardButton(f"👍 {up}",  callback_data=f"vote_up_{dep_num}_{idx}"),
+        InlineKeyboardButton(f"👎 {down}", callback_data=f"vote_down_{dep_num}_{idx}"),
+    ])
     keyboard.append([InlineKeyboardButton("◀️ Retour", callback_data=f"dep_{dep_num}")])
+    return "\n".join(lines), keyboard
+
+async def show_profil_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    _, dep_num, idx_str = query.data.split("_", 2)
+    text, keyboard = render_profil_detail(dep_num, int(idx_str))
     try:
-        await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
     except Exception:
-        await query.message.reply_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+        await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+
+# ── Votes 👍👎 ──────────────────────────────────────────────────────────────────
+async def handle_vote(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    _, vote_type, dep_num, idx_str = query.data.split("_", 3)
+    idx = int(idx_str)
+    p   = PROFILS[dep_num][idx]
+    nom = p["nom"]
+    uid = str(query.from_user.id)
+
+    entry = VOTES.setdefault(nom, {"up": 0, "down": 0, "voters": {}})
+    prev = entry["voters"].get(uid)
+    if prev == vote_type:
+        await query.answer("Tu as deja donne cet avis !", show_alert=True)
+        return
+    if prev == "up":
+        entry["up"] = max(0, entry["up"] - 1)
+    elif prev == "down":
+        entry["down"] = max(0, entry["down"] - 1)
+    entry[vote_type] = entry.get(vote_type, 0) + 1
+    entry["voters"][uid] = vote_type
+    save_votes()
+
+    await query.answer("Merci pour ton retour ! 🙏", show_alert=False)
+    text, keyboard = render_profil_detail(dep_num, idx)
+    try:
+        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    except Exception:
+        pass
+
+# ── Alertes secteur ────────────────────────────────────────────────────────────
+async def alertes_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    regions = {}
+    for n, d in DEPARTEMENTS.items():
+        regions.setdefault(d["region"], []).append(n)
+    keyboard = [[InlineKeyboardButton(f"📌 {r}", callback_data=f"aregion_{r}")] for r in sorted(regions)]
+    keyboard.append([InlineKeyboardButton("🏠 Retour", callback_data="home")])
+    text = (
+        "🔔 *Alertes secteur*\n\n"
+        "Abonne-toi a un ou plusieurs departements : tu recevras un message des qu'un nouveau profil certifie y est ajoute.\n\n"
+        "Choisis ta region :"
+    )
+    try:
+        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    except Exception:
+        await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+
+def render_alertes_deps(region, uid):
+    deps = sorted([(n, d["nom"]) for n, d in DEPARTEMENTS.items() if d["region"] == region])
+    keyboard = []
+    for n, nom in deps:
+        subscribed = uid in SUBSCRIPTIONS.get(n, [])
+        label = f"{'🔔' if subscribed else '🔕'} {n} - {nom}"
+        keyboard.append([InlineKeyboardButton(label, callback_data=f"adep_{n}")])
+    keyboard.append([InlineKeyboardButton("◀️ Regions", callback_data="alertes_start")])
+    text = f"📍 *{region}*\n🔔 = abonne · 🔕 = pas abonne\nClique sur un departement pour changer :"
+    return text, keyboard
+
+async def alertes_show_deps(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query  = update.callback_query
+    await query.answer()
+    region = query.data.replace("aregion_", "")
+    text, keyboard = render_alertes_deps(region, query.from_user.id)
+    try:
+        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    except Exception:
+        await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+
+async def alertes_toggle(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    dep   = query.data.replace("adep_", "")
+    uid   = query.from_user.id
+    subs  = SUBSCRIPTIONS.setdefault(dep, [])
+    if uid in subs:
+        subs.remove(uid)
+        await query.answer("🔕 Desabonne !", show_alert=False)
+    else:
+        subs.append(uid)
+        await query.answer("🔔 Abonne !", show_alert=False)
+    save_subscriptions()
+    region = DEPARTEMENTS.get(dep, {}).get("region", "")
+    text, keyboard = render_alertes_deps(region, uid)
+    try:
+        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
+    except Exception:
+        pass
 
 # ── Pages menu ─────────────────────────────────────────────────────────────────
 async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -570,7 +729,7 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = []
         for dep, i, p in certified_list:
             secteur = p.get("secteur", f"Dep. {dep}")
-            keyboard.append([InlineKeyboardButton(f"✅ {p['nom']} — {secteur}", callback_data=f"profil_{dep}_{i}")])
+            keyboard.append([InlineKeyboardButton(f"{badge_new(p)}✅ {p['nom']} — {secteur}", callback_data=f"profil_{dep}_{i}")])
         keyboard.append([InlineKeyboardButton("◀️ Retour", callback_data="menu_certified")])
         keyboard.append([InlineKeyboardButton("🏠 Accueil", callback_data="home")])
         await query.message.delete()
@@ -867,6 +1026,10 @@ def main():
     app.add_handler(CallbackQueryHandler(show_departements,  pattern="^region_"))
     app.add_handler(CallbackQueryHandler(show_profils,       pattern="^dep_"))
     app.add_handler(CallbackQueryHandler(show_profil_detail, pattern="^profil_"))
+    app.add_handler(CallbackQueryHandler(handle_vote,        pattern="^vote_"))
+    app.add_handler(CallbackQueryHandler(alertes_start,      pattern="^alertes_start$"))
+    app.add_handler(CallbackQueryHandler(alertes_show_deps,  pattern="^aregion_"))
+    app.add_handler(CallbackQueryHandler(alertes_toggle,     pattern="^adep_"))
     app.add_handler(CallbackQueryHandler(handle_menu_cb,     pattern="^(menu_|home|promo_|certif_f_|certif_choix|certif_particulier|certif_plug|check_sub)"))
 
     print("🤖 La Note Verte - Bot lance !")
