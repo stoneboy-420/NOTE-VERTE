@@ -136,7 +136,7 @@ async def notify_admin(context, text):
 async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("✅ Liste Certified", callback_data="menu_certified"),
-         InlineKeyboardButton("📞 Contact",         url="https://t.me/stoneboy_420")],
+         InlineKeyboardButton("📞 Contact",         url="https://t.me/LNV420")],
         [InlineKeyboardButton("📋 Liste SK-AM",     callback_data="menu_skam"),
          InlineKeyboardButton("🌐 Nos Reseaux",     callback_data="menu_reseaux")],
         [InlineKeyboardButton("🎁 Concours",        callback_data="menu_concours"),
@@ -739,7 +739,7 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif action == "menu_concours":
         keyboard = [
-            [InlineKeyboardButton("📸 Abonne-toi sur Instagram", url="https://www.instagram.com/stoneboy_420?igsh=N3JlZ3hwenJ1b3Q2&utm_source=qr")],
+            [InlineKeyboardButton("📸 Abonne-toi sur Instagram", url="https://www.instagram.com/lnv_420?stkn=N3JlZ3hwenJ1b3Q2&utm_source=qr")],
             [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
         ]
         await query.message.delete()
@@ -749,8 +749,8 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif action == "menu_reseaux":
         keyboard = [
-            [InlineKeyboardButton("📸 Instagram", url="https://www.instagram.com/stoneboy_420?igsh=N3JlZ3hwenJ1b3Q2&utm_source=qr")],
-            [InlineKeyboardButton("💬 Telegram",  url="https://t.me/stoneboy_420")],
+            [InlineKeyboardButton("📸 Instagram", url="https://www.instagram.com/lnv_420?stkn=N3JlZ3hwenJ1b3Q2&utm_source=qr")],
+            [InlineKeyboardButton("💬 Telegram",  url="https://t.me/LNV420")],
             [InlineKeyboardButton("🔒 Signal",    url="https://signal.me/#eu/cURmi5ud2CX6zMtp-ho4ORADyPglm45d6H5F13l7Su627Zip-_BJ7J2GD23_coWj")],
             [InlineKeyboardButton("🏠 Accueil", callback_data="home")],
         ]
@@ -836,7 +836,7 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif action == "certif_particulier":
         keyboard = [
-            [InlineKeyboardButton("📩 Contacter @stoneboy_420", url="https://t.me/stoneboy_420")],
+            [InlineKeyboardButton("📩 Contacter @LNV420", url="https://t.me/LNV420")],
             [InlineKeyboardButton("◀️ Retour", callback_data="certif_choix")],
         ]
         try:
@@ -874,7 +874,7 @@ async def handle_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif action == "certif_plug":
         keyboard = [
-            [InlineKeyboardButton("📩 Contacter @stoneboy_420", url="https://t.me/stoneboy_420")],
+            [InlineKeyboardButton("📩 Contacter @LNV420", url="https://t.me/LNV420")],
             [InlineKeyboardButton("◀️ Retour", callback_data="certif_choix")],
         ]
         try:
